@@ -17,13 +17,22 @@ class MULTIPLAYER_API AMBaseCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent *SpringArmComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UHealthComponent *HealthComp;
+
 public:
 	// Sets default values for this character's properties
 	AMBaseCharacter();
 
 protected:
+#pragma region UE4 LIFECYCLE
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+#pragma endregion
 
 	//////////////*BASE CHARACTER MOVEMENT*////////////////
 	void MoveRight(float Value);
@@ -40,13 +49,12 @@ protected:
 	////////////////*END BASE CHARACTER MOVEMENT*///////////
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	FORCEINLINE UCameraComponent *GetCamera() const { return Camera; }
 	FORCEINLINE USpringArmComponent *GetSpringArmComp() const { return SpringArmComp; }
+	FORCEINLINE UHealthComponent *GetHealthComp() const { return HealthComp; }
 	
 };

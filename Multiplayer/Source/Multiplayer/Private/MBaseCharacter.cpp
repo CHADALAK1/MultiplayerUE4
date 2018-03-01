@@ -3,6 +3,7 @@
 #include "MBaseCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "HealthComponent.h"
 #include "Camera/CameraComponent.h"
 
 
@@ -18,6 +19,8 @@ AMBaseCharacter::AMBaseCharacter()
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArmComp);
+
+	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
 
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
