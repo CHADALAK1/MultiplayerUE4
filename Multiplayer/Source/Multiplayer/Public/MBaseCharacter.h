@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "MBaseCharacter.generated.h"
 
+class AWeapon;
+
 UCLASS()
 class MULTIPLAYER_API AMBaseCharacter : public ACharacter
 {
@@ -23,6 +25,9 @@ class MULTIPLAYER_API AMBaseCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AMBaseCharacter();
+
+	UPROPERTY(EditDefaultsOnly, Category = Weapon)
+	TSubclassOf<AWeapon> DefaultWeapon;
 
 protected:
 #pragma region UE4 LIFECYCLE
@@ -47,6 +52,18 @@ protected:
 
 	void EndCrouch();
 	////////////////*END BASE CHARACTER MOVEMENT*///////////
+
+	void StartFire();
+
+	void ExitFire();
+
+	AWeapon *CurrentWeapon;
+
+
+	UFUNCTION()
+	void OnHandleDamage(UHealthComponent *OwningHealthComp, AActor* DamagedActor, float Damage,
+		const class UDamageType* DamageType, class AController* InstigatedBy,
+		AActor* DamageCauser);
 
 public:	
 

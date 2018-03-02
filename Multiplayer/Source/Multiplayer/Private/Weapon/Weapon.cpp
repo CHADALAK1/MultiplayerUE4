@@ -3,6 +3,7 @@
 #include "Weapon.h"
 #include "Multiplayer.h"
 #include "MBaseCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "Components/SkeletalMeshComponent.h"
 
 
@@ -32,7 +33,7 @@ void AWeapon::EndFire()
 {
 	if (MyOwner)
 	{
-		EndFire();
+		
 	}
 }
 
@@ -46,7 +47,9 @@ void AWeapon::Fire()
 
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
-		TraceEnd = EyeLocation + (EyeRotation.Vector() * 10000);
+		FVector ShotDirection = EyeRotation.Vector();
+
+		TraceEnd = EyeLocation + (ShotDirection * 10000);
 
 		FCollisionQueryParams CollisionParams;
 		CollisionParams.AddIgnoredActor(MyOwner);
@@ -57,7 +60,15 @@ void AWeapon::Fire()
 
 		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, CollisionParams))
 		{
-			// DO STUFF
+			AActor *LineHitActor = Hit.GetActor();
+
+			if (LineHitActor)
+			{
+				/*
+				UGameplayStatics::ApplyPointDamage(LineHitActor, 15.0f, ShotDirection, 
+					Hit, MyOwner->GetInstigatorController(), this, nullptr);
+					*/
+			}
 		}
 	}
 }

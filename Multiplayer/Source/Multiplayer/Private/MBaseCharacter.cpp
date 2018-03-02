@@ -4,6 +4,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "HealthComponent.h"
+#include "Weapon.h"
 #include "Camera/CameraComponent.h"
 
 
@@ -24,13 +25,41 @@ AMBaseCharacter::AMBaseCharacter()
 
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
+	HealthComp->TakeDamage.AddDynamic(this, &AMBaseCharacter::OnHandleDamage);
+
 }
 
 // Called when the game starts or when spawned
 void AMBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	CurrentWeapon = GetWorld()->SpawnActor<AWeapon>(DefaultWeapon);
+
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "WeaponSocket");
+		CurrentWeapon->SetCurrentOwner(this);
+	}
 	
+}
+
+
+// Called to bind functionality to input
+void AMBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis("MoveForward", this, &AMBaseCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AMBaseCharacter::MoveRight);
+	PlayerInputComponent->BindAxis("LookUp", this, &AMBaseCharacter::LookUp);
+	PlayerInputComponent->BindAxis("TurnRight", this, &AMBaseCharacter::TurnRight);
+
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AMBaseCharacter::BeginCrouch);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AMBaseCharacter::EndCrouch);
+
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AMBaseCharacter::StartFire);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AMBaseCharacter::ExitFire);
 }
 
 void AMBaseCharacter::MoveRight(float Value)
@@ -63,24 +92,30 @@ void AMBaseCharacter::EndCrouch()
 	UnCrouch();
 }
 
+void AMBaseCharacter::StartFire()
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->StartFire();
+	}
+}
+
+void AMBaseCharacter::ExitFire()
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->EndFire();
+	}
+}
+
+void AMBaseCharacter::OnHandleDamage(UHealthComponent *OwningHealthComp, AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+{
+
+}
+
 // Called every frame
 void AMBaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-}
-
-// Called to bind functionality to input
-void AMBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	PlayerInputComponent->BindAxis("MoveForward", this, &AMBaseCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AMBaseCharacter::MoveRight);
-	PlayerInputComponent->BindAxis("LookUp", this, &AMBaseCharacter::LookUp);
-	PlayerInputComponent->BindAxis("TurnRight", this, &AMBaseCharacter::TurnRight);
-
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AMBaseCharacter::BeginCrouch);
-	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AMBaseCharacter::EndCrouch);
 }
 

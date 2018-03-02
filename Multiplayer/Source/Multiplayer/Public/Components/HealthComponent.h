@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "HealthComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FTakeDamage, UHealthComponent*, OwningHealthComp, AActor*, DamagedActor, float, Damage, const class UDamageType*, DamageType, class AController*, InstigatedBy, AActor*, DamageCauser);
+
 
 UCLASS( ClassGroup=(MULTIPLAYER), meta=(BlueprintSpawnableComponent) )
 class MULTIPLAYER_API UHealthComponent : public UActorComponent
@@ -16,15 +18,21 @@ public:
 	// Sets default values for this component's properties
 	UHealthComponent();
 
+	FTakeDamage TakeDamage;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-	int32 DefaultHealth;
+	float DefaultHealth;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Health")
-	int32 Health;
-		
+	float Health;
+
+	UFUNCTION()
+	void OnHandleDamage(AActor* DamagedActor, float Damage,
+		const class UDamageType* DamageType, class AController* InstigatedBy,
+		AActor* DamageCauser);
 	
 };
