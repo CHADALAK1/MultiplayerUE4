@@ -29,6 +29,23 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = Weapon)
 	TSubclassOf<AWeapon> DefaultWeapon;
 
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = Dead)
+	bool bIsDead;
+
+	UPROPERTY(EditDefaultsOnly, Category = Player)
+	float ZoomedFOV;
+
+	UPROPERTY(EditDefaultsOnly, Category = Player, meta = (ClampMin = 0.1, ClampMax = 100))
+	float ZoomInterpSpeed;
+
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = Player)
+	float ControlPitchRotation;
+
+	void ClientSetPitchRotation();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetPitchRotation();
+
 protected:
 #pragma region UE4 LIFECYCLE
 	// Called when the game starts or when spawned
@@ -51,12 +68,23 @@ protected:
 	void BeginCrouch();
 
 	void EndCrouch();
+
+	void StartAim();
+
+	void EndAim();
 	////////////////*END BASE CHARACTER MOVEMENT*///////////
 
 	void StartFire();
 
 	void ExitFire();
 
+	bool bWantsToZoom;
+
+	void ZoomHandling();
+
+	float DefaultFOV;
+
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
 	AWeapon *CurrentWeapon;
 
 
@@ -69,6 +97,8 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual void GetActorEyesViewPoint(FVector& out_Location, FRotator& out_Rotation) const override;
 
 	FORCEINLINE UCameraComponent *GetCamera() const { return Camera; }
 	FORCEINLINE USpringArmComponent *GetSpringArmComp() const { return SpringArmComp; }

@@ -27,12 +27,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float DefaultHealth;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Health")
+	UPROPERTY(Replicated, VisibleDefaultsOnly, BlueprintReadOnly, Category = "Health")
 	float Health;
 
 	UFUNCTION()
 	void OnHandleDamage(AActor* DamagedActor, float Damage,
 		const class UDamageType* DamageType, class AController* InstigatedBy,
 		AActor* DamageCauser);
+
+public:
+
+	FORCEINLINE float GetHealth() const { return Health; }
 	
 };

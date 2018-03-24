@@ -2,12 +2,15 @@
 
 #include "HealthComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
 {
 	DefaultHealth = 100;
+
+	SetIsReplicated(true);
 }
 
 
@@ -16,14 +19,17 @@ void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Health = DefaultHealth;
-
-	AActor *HealthOwner = GetOwner();
-
-	if (HealthOwner)
+	if (GetOwnerRole() == ROLE_Authority)
 	{
-		HealthOwner->OnTakeAnyDamage.AddDynamic(this, &UHealthComponent::OnHandleDamage);
+		AActor *HealthOwner = GetOwner();
+
+		if (HealthOwner)
+		{
+			HealthOwner->OnTakeAnyDamage.AddDynamic(this, &UHealthComponent::OnHandleDamage);
+		}
 	}
+
+	Health = DefaultHealth;
 
 }
 
@@ -38,4 +44,11 @@ void UHealthComponent::OnHandleDamage(AActor* DamagedActor, float Damage, const 
 	UE_LOG(LogTemp, Log, TEXT("%s"), *FString::SanitizeFloat(Health));
 
 	TakeDamage.Broadcast(this, DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
+}
+
+void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UHealthComponent, Health);
 }

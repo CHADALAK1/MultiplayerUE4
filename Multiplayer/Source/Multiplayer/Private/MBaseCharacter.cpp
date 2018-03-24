@@ -4,8 +4,11 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "HealthComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Weapon.h"
 #include "Camera/CameraComponent.h"
+#include "Net/UnrealNetwork.h"
 
 
 // Sets default values
@@ -27,6 +30,34 @@ AMBaseCharacter::AMBaseCharacter()
 
 	HealthComp->TakeDamage.AddDynamic(this, &AMBaseCharacter::OnHandleDamage);
 
+	bIsDead = false;
+
+	bWantsToZoom = false;
+
+	ZoomedFOV = 65;
+
+	ZoomInterpSpeed = 20;
+
+}
+
+void AMBaseCharacter::ClientSetPitchRotation()
+{
+	if (Role < ROLE_Authority)
+	{
+		ServerSetPitchRotation();
+	}
+
+	ControlPitchRotation = GetControlRotation().Pitch;
+}
+
+void AMBaseCharacter::ServerSetPitchRotation_Implementation()
+{
+	ClientSetPitchRotation();
+}
+
+bool AMBaseCharacter::ServerSetPitchRotation_Validate()
+{
+	return true;
 }
 
 // Called when the game starts or when spawned
@@ -34,14 +65,27 @@ void AMBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CurrentWeapon = GetWorld()->SpawnActor<AWeapon>(DefaultWeapon);
+	DefaultFOV = GetCamera()->FieldOfView;
 
-	if (CurrentWeapon)
+	if (Role == ROLE_Authority)
 	{
-		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "WeaponSocket");
-		CurrentWeapon->SetCurrentOwner(this);
+		CurrentWeapon = GetWorld()->SpawnActor<AWeapon>(DefaultWeapon);
+
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->SetOwner(this);
+			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "WeaponSocket");
+		}
 	}
 	
+}
+
+// Called every frame
+void AMBaseCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	ZoomHandling();
 }
 
 
@@ -60,6 +104,9 @@ void AMBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AMBaseCharacter::StartFire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AMBaseCharacter::ExitFire);
+
+	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AMBaseCharacter::StartAim);
+	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AMBaseCharacter::EndAim);
 }
 
 void AMBaseCharacter::MoveRight(float Value)
@@ -75,6 +122,7 @@ void AMBaseCharacter::MoveForward(float Value)
 void AMBaseCharacter::LookUp(float Value)
 {
 	AddControllerPitchInput(Value);
+	ClientSetPitchRotation();
 }
 
 void AMBaseCharacter::TurnRight(float Value)
@@ -90,6 +138,26 @@ void AMBaseCharacter::BeginCrouch()
 void AMBaseCharacter::EndCrouch()
 {
 	UnCrouch();
+}
+
+void AMBaseCharacter::StartAim()
+{
+	bWantsToZoom = true;
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->SetADS(true);
+	}
+	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
+}
+
+void AMBaseCharacter::EndAim()
+{
+	bWantsToZoom = false;
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->SetADS(false);
+	}
+	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 }
 
 void AMBaseCharacter::StartFire()
@@ -108,14 +176,45 @@ void AMBaseCharacter::ExitFire()
 	}
 }
 
-void AMBaseCharacter::OnHandleDamage(UHealthComponent *OwningHealthComp, AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+void AMBaseCharacter::ZoomHandling()
 {
+	float TargetFOV = bWantsToZoom ? ZoomedFOV : DefaultFOV;
+	float NewFOV = FMath::FInterpTo(GetCamera()->FieldOfView, TargetFOV, GetWorld()->GetDeltaSeconds(),
+		ZoomInterpSpeed);
 
+	GetCamera()->SetFieldOfView(NewFOV);
 }
 
-// Called every frame
-void AMBaseCharacter::Tick(float DeltaTime)
+void AMBaseCharacter::OnHandleDamage(UHealthComponent *OwningHealthComp,
+	AActor* DamagedActor, float Damage, const class UDamageType* DamageType, 
+	class AController* InstigatedBy, AActor* DamageCauser)
 {
-	Super::Tick(DeltaTime);
+	UE_LOG(LogTemp, Log, TEXT("TAKING DAMAGE"));
+	if (HealthComp->GetHealth() <= 0.0f && !bIsDead)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DEAD"));
+		bIsDead = true;
+		GetMovementComponent()->StopMovementImmediately();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		DetachFromControllerPendingDestroy();
+
+		SetLifeSpan(3.0f);
+	}
+}
+
+void AMBaseCharacter::GetActorEyesViewPoint(FVector& out_Location, FRotator& out_Rotation) const
+{
+	out_Location = Camera->GetComponentLocation();
+	out_Rotation = Camera->GetComponentRotation();
+}
+
+void AMBaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AMBaseCharacter, CurrentWeapon);
+	DOREPLIFETIME(AMBaseCharacter, bIsDead);
+	DOREPLIFETIME(AMBaseCharacter, ControlPitchRotation);
 }
 
