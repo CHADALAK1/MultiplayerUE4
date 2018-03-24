@@ -148,6 +148,10 @@ void AMBaseCharacter::StartAim()
 		CurrentWeapon->SetADS(true);
 	}
 	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
+	if (Role < ROLE_Authority)
+	{
+		ServerSetMaxWalkSpeed(300.0f);
+	}
 }
 
 void AMBaseCharacter::EndAim()
@@ -158,6 +162,10 @@ void AMBaseCharacter::EndAim()
 		CurrentWeapon->SetADS(false);
 	}
 	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+	if (Role < ROLE_Authority)
+	{
+		ServerSetMaxWalkSpeed(600.0f);
+	}
 }
 
 void AMBaseCharacter::StartFire()
@@ -174,6 +182,16 @@ void AMBaseCharacter::ExitFire()
 	{
 		CurrentWeapon->EndFire();
 	}
+}
+
+void AMBaseCharacter::ServerSetMaxWalkSpeed_Implementation(float Speed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = Speed;
+}
+
+bool AMBaseCharacter::ServerSetMaxWalkSpeed_Validate(float Speed)
+{
+	return true;
 }
 
 void AMBaseCharacter::ZoomHandling()

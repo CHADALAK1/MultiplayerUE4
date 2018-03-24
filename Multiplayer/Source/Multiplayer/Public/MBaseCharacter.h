@@ -46,6 +46,9 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSetPitchRotation();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetMaxWalkSpeed(float Speed);
+
 protected:
 #pragma region UE4 LIFECYCLE
 	// Called when the game starts or when spawned

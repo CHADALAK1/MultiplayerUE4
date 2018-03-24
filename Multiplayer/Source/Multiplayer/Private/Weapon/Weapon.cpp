@@ -172,7 +172,7 @@ void AWeapon::PlayMuzzleFX()
 	if (WeaponConfig.MuzzleFX)
 	{
 		UParticleSystemComponent *SpawnedFX = UGameplayStatics::SpawnEmitterAttached(WeaponConfig.MuzzleFX,
-			GetMesh(), "Muzzle");
+			GetMesh(), FName("Muzzle"));
 	}
 }
 
