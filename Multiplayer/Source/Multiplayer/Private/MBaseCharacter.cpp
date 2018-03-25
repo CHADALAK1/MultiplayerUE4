@@ -4,8 +4,14 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "HealthComponent.h"
+#include "GameInstance/MGameInstance.h"
+#include "MultiplayerGameModeBase.h"
+#include "Announcer/MAnnouncer.h"
+#include "Sound/SoundCue.h"
+#include "GameFramework/PlayerState.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Weapon.h"
 #include "Camera/CameraComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -210,6 +216,21 @@ void AMBaseCharacter::OnHandleDamage(UHealthComponent *OwningHealthComp,
 	UE_LOG(LogTemp, Log, TEXT("TAKING DAMAGE"));
 	if (HealthComp->GetHealth() <= 0.0f && !bIsDead)
 	{
+		UMGameInstance *GI = Cast<UMGameInstance>(GetGameInstance());
+		if (GI)
+		{
+			APlayerController *PC = Cast<APlayerController>(GetController());
+			if (PC)
+			{
+				PC->ClientPlaySound(GI->AnnouncerSounds.ClientKilled);
+			}
+
+			PC = Cast<APlayerController>(InstigatedBy);
+			if (PC)
+			{
+				PC->ClientPlaySound(GI->AnnouncerSounds.EnemyKilled);
+			}
+		}
 		UE_LOG(LogTemp, Warning, TEXT("DEAD"));
 		bIsDead = true;
 		GetMovementComponent()->StopMovementImmediately();
