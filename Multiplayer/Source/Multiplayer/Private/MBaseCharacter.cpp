@@ -9,6 +9,7 @@
 #include "Announcer/MAnnouncer.h"
 #include "Sound/SoundCue.h"
 #include "GameFramework/PlayerState.h"
+#include "PlayerController/MPlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -262,16 +263,16 @@ void AMBaseCharacter::OnHandleDamage(UHealthComponent *OwningHealthComp,
 		UMGameInstance *GI = Cast<UMGameInstance>(GetGameInstance());
 		if (GI)
 		{
-			APlayerController *PC = Cast<APlayerController>(GetController());
+			AMPlayerController *PC = Cast<AMPlayerController>(GetController());
 			if (PC)
 			{
-				PC->ClientPlaySound(GI->AnnouncerSounds.ClientKilled);
+				PC->ClearKillCount();
 			}
 
-			PC = Cast<APlayerController>(InstigatedBy);
+			PC = Cast<AMPlayerController>(InstigatedBy);
 			if (PC)
 			{
-				PC->ClientPlaySound(GI->AnnouncerSounds.EnemyKilled);
+				PC->AddKill();
 			}
 		}
 		UE_LOG(LogTemp, Warning, TEXT("DEAD"));

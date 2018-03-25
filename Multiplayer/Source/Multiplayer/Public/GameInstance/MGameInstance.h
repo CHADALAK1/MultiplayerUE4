@@ -19,7 +19,28 @@ struct FAnnoucerSounds
 	USoundCue *EnemyKilled;
 
 	UPROPERTY(EditDefaultsOnly, Category = Config)
+	USoundCue *EnemyDoubleKilled;
+
+	UPROPERTY(EditDefaultsOnly, Category = Config)
+	USoundCue *EnemyTripleKilled;
+
+	UPROPERTY(EditDefaultsOnly, Category = Config)
+	USoundCue *EnemyMonsterKilled;
+
+	UPROPERTY(EditDefaultsOnly, Category = Config)
+	USoundCue *EnemyUltraKilled;
+
+	UPROPERTY(EditDefaultsOnly, Category = Config)
+	USoundCue *EnemyUnstoppable;
+
+	UPROPERTY(EditDefaultsOnly, Category = Config)
+	USoundCue *EnemyHolyShit;
+
+	UPROPERTY(EditDefaultsOnly, Category = Config)
 	USoundCue *ClientKilled;
+
+	UPROPERTY(EditDefaultsOnly, Category = Config)
+	USoundCue *ClientStreakKilled;
 };
 
 /**
