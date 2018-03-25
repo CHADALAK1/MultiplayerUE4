@@ -32,6 +32,9 @@ public:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = Dead)
 	bool bIsDead;
 
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = Movement)
+	bool bIsSprinting;
+
 	UPROPERTY(EditDefaultsOnly, Category = Player)
 	float ZoomedFOV;
 
@@ -57,6 +60,8 @@ protected:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 #pragma endregion
 
 	//////////////*BASE CHARACTER MOVEMENT*////////////////
@@ -75,6 +80,10 @@ protected:
 	void StartAim();
 
 	void EndAim();
+
+	void StartSprint();
+
+	void EndSprint();
 	////////////////*END BASE CHARACTER MOVEMENT*///////////
 
 	void StartFire();

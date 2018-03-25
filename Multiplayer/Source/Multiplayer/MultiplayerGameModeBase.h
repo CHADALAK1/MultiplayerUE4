@@ -27,4 +27,5 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Match)
 	void PlayAnnoucerSound(USoundCue *Sound);
 	
+	void RespawnDeadPlayer();
 };

@@ -26,3 +26,17 @@ void AMultiplayerGameModeBase::PlayAnnoucerSound(USoundCue *Sound)
 	}
 }
 
+void AMultiplayerGameModeBase::RespawnDeadPlayer()
+{
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		if (!(Iterator->IsValid())) continue;
+
+		APlayerController *PC = Iterator->Get();
+		if (PC && PC->GetPawn() == nullptr)
+		{
+			RestartPlayer(PC);
+		}
+	}
+}
+

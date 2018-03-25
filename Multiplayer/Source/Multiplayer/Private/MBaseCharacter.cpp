@@ -95,6 +95,16 @@ void AMBaseCharacter::Tick(float DeltaTime)
 }
 
 
+void AMBaseCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	AMultiplayerGameModeBase *GM = Cast<AMultiplayerGameModeBase>(GetWorld()->GetAuthGameMode());
+	if (GM)
+	{
+		GM->RespawnDeadPlayer();
+	}
+}
+
 // Called to bind functionality to input
 void AMBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -113,6 +123,9 @@ void AMBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AMBaseCharacter::StartAim);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AMBaseCharacter::EndAim);
+
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMBaseCharacter::StartSprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMBaseCharacter::EndSprint);
 }
 
 void AMBaseCharacter::MoveRight(float Value)
@@ -148,6 +161,10 @@ void AMBaseCharacter::EndCrouch()
 
 void AMBaseCharacter::StartAim()
 {
+	if (bIsSprinting)
+	{
+		EndSprint();
+	}
 	bWantsToZoom = true;
 	if (CurrentWeapon)
 	{
@@ -171,6 +188,32 @@ void AMBaseCharacter::EndAim()
 	if (Role < ROLE_Authority)
 	{
 		ServerSetMaxWalkSpeed(600.0f);
+	}
+}
+
+void AMBaseCharacter::StartSprint()
+{
+	if (!GetCharacterMovement()->IsCrouching() && !bIsSprinting && !bWantsToZoom)
+	{
+		bIsSprinting = true;
+		GetCharacterMovement()->MaxWalkSpeed = 750.0f;
+		if (Role < ROLE_Authority)
+		{
+			ServerSetMaxWalkSpeed(750.0f);
+		}
+	}
+}
+
+void AMBaseCharacter::EndSprint()
+{
+	if (!GetCharacterMovement()->IsCrouching() && bIsSprinting && !bWantsToZoom)
+	{
+		bIsSprinting = false;
+		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+		if (Role < ROLE_Authority)
+		{
+			ServerSetMaxWalkSpeed(600.0f);
+		}
 	}
 }
 
@@ -255,5 +298,6 @@ void AMBaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(AMBaseCharacter, CurrentWeapon);
 	DOREPLIFETIME(AMBaseCharacter, bIsDead);
 	DOREPLIFETIME(AMBaseCharacter, ControlPitchRotation);
+	DOREPLIFETIME(AMBaseCharacter, bIsSprinting);
 }
 
