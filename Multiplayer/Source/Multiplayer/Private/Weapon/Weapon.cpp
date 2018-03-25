@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "DisplayDebugHelpers.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "ParticleDefinitions.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Camera/CameraShake.h"
@@ -85,6 +86,48 @@ void AWeapon::Fire()
 
 		FHitResult Hit;
 
+		TArray<FHitResult> Hits;
+
+		if (GetWorld()->LineTraceMultiByChannel(Hits, EyeLocation, TraceEnd, COLLISION_WEAPON, CollisionParams))
+		{
+			for (int i = 0; i < Hits.Num(); i++)
+			{
+				FVector SocketLoc = MyOwner->GetActorLocation() - Hits[i].Location;
+				FVector HitLoc = SpreadVector * -1;
+
+				float HitDot = FVector::DotProduct(SocketLoc.GetSafeNormal(), HitLoc);
+				if (HitDot > 0.5f)
+				{
+					AActor *LineHitActor = Hits[i].GetActor();
+
+					if (LineHitActor && DamageType)
+					{
+						EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+
+						float Damage = 25.0f;
+						switch (SurfaceType)
+						{
+						case SURFACE_DAMAGEDEFAULT:
+							Damage = 10.0f;
+							break;
+						case SURFACE_DAMAGEHEAD:
+							Damage = 80.0f;
+							break;
+						default:
+							break;
+						}
+
+						TraceEnd = Hits[i].ImpactPoint;
+						UGameplayStatics::ApplyPointDamage(LineHitActor, Damage, ShotDirection,
+							Hits[i], MyOwner->GetInstigatorController(), this, DamageType);
+
+						PlayImpactFX(TraceEnd);
+					}
+				}
+			}
+		}
+
+		/*
 		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, CollisionParams))
 		{
 			AActor *LineHitActor = Hit.GetActor();
@@ -111,8 +154,7 @@ void AWeapon::Fire()
 					Hit, MyOwner->GetInstigatorController(), this, DamageType);
 			}
 		}
-
-		PlayImpactFX(TraceEnd);
+		*/
 		PlayTracerFX(TraceEnd);
 
 		if (Role == ROLE_Authority)
