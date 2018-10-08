@@ -102,7 +102,7 @@ void AWeapon::Fire()
 					GetWorld()->LineTraceSingleByChannel(HitDummy, GetMesh()->GetSocketLocation("MF"), TraceEnd,
 						COLLISION_WEAPON, CollisionParams);
 					//if the gun from the impact point match, hit the desired target
-					if (FVector::Dist(Hits[i].Location, HitDummy.Location) < 25)
+					if (FVector::Dist(Hits[i].Location, HitDummy.Location) < 100)
 					{
 						AActor *LineHitActor = Hits[i].GetActor();
 
