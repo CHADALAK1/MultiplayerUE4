@@ -85,6 +85,7 @@ void AWeapon::Fire()
 		TraceEnd = EyeLocation + (SpreadVector * 10000);
 
 		FHitResult Hit;
+		FHitResult HitDummy;
 
 		TArray<FHitResult> Hits;
 
@@ -98,63 +99,68 @@ void AWeapon::Fire()
 				float HitDot = FVector::DotProduct(SocketLoc.GetSafeNormal(), HitLoc);
 				if (HitDot > 0.5f)
 				{
-					AActor *LineHitActor = Hits[i].GetActor();
-
-					if (LineHitActor && DamageType)
+					GetWorld()->LineTraceSingleByChannel(HitDummy, GetMesh()->GetSocketLocation("MF"), TraceEnd,
+						COLLISION_WEAPON, CollisionParams);
+					if (FVector::Dist(Hits[i].Location, HitDummy.Location) < 25)
 					{
-						EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+						AActor *LineHitActor = Hits[i].GetActor();
 
-						float Damage = 25.0f;
-						switch (SurfaceType)
+						if (LineHitActor && DamageType)
 						{
-						case SURFACE_DAMAGEDEFAULT:
-							Damage = 10.0f;
-							break;
-						case SURFACE_DAMAGEHEAD:
-							Damage = 80.0f;
-							break;
-						default:
-							break;
+							EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+
+							float Damage = 25.0f;
+							switch (SurfaceType)
+							{
+							case SURFACE_DAMAGEDEFAULT:
+								Damage = 10.0f;
+								break;
+							case SURFACE_DAMAGEHEAD:
+								Damage = 80.0f;
+								break;
+							default:
+								break;
+							}
+
+							TraceEnd = Hits[i].ImpactPoint;
+							UGameplayStatics::ApplyPointDamage(LineHitActor, Damage, ShotDirection,
+								Hits[i], MyOwner->GetInstigatorController(), this, DamageType);
+
+							PlayImpactFX(TraceEnd);
 						}
+					}
+					else
+					{
+						AActor *LineHitActor = HitDummy.GetActor();
 
-						TraceEnd = Hits[i].ImpactPoint;
-						UGameplayStatics::ApplyPointDamage(LineHitActor, Damage, ShotDirection,
-							Hits[i], MyOwner->GetInstigatorController(), this, DamageType);
+						if (LineHitActor && DamageType)
+						{
+							EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
-						PlayImpactFX(TraceEnd);
+							float Damage = 25.0f;
+							switch (SurfaceType)
+							{
+							case SURFACE_DAMAGEDEFAULT:
+								Damage = 10.0f;
+								break;
+							case SURFACE_DAMAGEHEAD:
+								Damage = 80.0f;
+								break;
+							default:
+								break;
+							}
+
+							TraceEnd = Hits[i].ImpactPoint;
+							UGameplayStatics::ApplyPointDamage(LineHitActor, Damage, ShotDirection,
+								HitDummy, MyOwner->GetInstigatorController(), this, DamageType);
+
+							PlayImpactFX(HitDummy.ImpactPoint);
+						}
 					}
 				}
 			}
 		}
 
-		/*
-		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, CollisionParams))
-		{
-			AActor *LineHitActor = Hit.GetActor();
-
-			if (LineHitActor && DamageType)
-			{
-				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
-
-				float Damage = 25.0f;
-				switch (SurfaceType)
-				{
-				case SURFACE_DAMAGEDEFAULT:
-					Damage = 10.0f;
-					break;
-				case SURFACE_DAMAGEHEAD:
-					Damage = 80.0f;
-					break;
-				default:
-					break;
-				}
-
-				TraceEnd = Hit.ImpactPoint;
-				UGameplayStatics::ApplyPointDamage(LineHitActor, Damage, ShotDirection,
-					Hit, MyOwner->GetInstigatorController(), this, DamageType);
-			}
-		}
-		*/
 		PlayTracerFX(TraceEnd);
 
 		if (Role == ROLE_Authority)
