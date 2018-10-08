@@ -101,6 +101,7 @@ void AWeapon::Fire()
 				{
 					GetWorld()->LineTraceSingleByChannel(HitDummy, GetMesh()->GetSocketLocation("MF"), TraceEnd,
 						COLLISION_WEAPON, CollisionParams);
+					//if the gun from the impact point match, hit the desired target
 					if (FVector::Dist(Hits[i].Location, HitDummy.Location) < 25)
 					{
 						AActor *LineHitActor = Hits[i].GetActor();
@@ -129,6 +130,7 @@ void AWeapon::Fire()
 							PlayImpactFX(TraceEnd);
 						}
 					}
+					//if not, use the gun barrel to dictate where the shot has been taken
 					else
 					{
 						AActor *LineHitActor = HitDummy.GetActor();
