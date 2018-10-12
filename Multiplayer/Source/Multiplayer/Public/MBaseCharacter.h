@@ -73,6 +73,8 @@ protected:
 
 	void TurnRight(float Value);
 
+	void StartJump();
+
 	void BeginCrouch();
 
 	void EndCrouch();

@@ -119,6 +119,8 @@ void AMBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AMBaseCharacter::BeginCrouch);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AMBaseCharacter::EndCrouch);
 
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AMBaseCharacter::StartJump);
+
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AMBaseCharacter::StartFire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AMBaseCharacter::ExitFire);
 
@@ -148,6 +150,14 @@ void AMBaseCharacter::LookUp(float Value)
 void AMBaseCharacter::TurnRight(float Value)
 {
 	AddControllerYawInput(Value);
+}
+
+void AMBaseCharacter::StartJump()
+{
+	if (!bWantsToZoom)
+	{
+		Jump();
+	}
 }
 
 void AMBaseCharacter::BeginCrouch()
