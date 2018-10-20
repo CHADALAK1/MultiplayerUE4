@@ -41,6 +41,8 @@ AMBaseCharacter::AMBaseCharacter()
 
 	bWantsToZoom = false;
 
+	bWantsToFire = true;
+
 	ZoomedFOV = 65;
 
 	ZoomInterpSpeed = 20;
@@ -207,6 +209,11 @@ void AMBaseCharacter::StartSprint()
 	if (!GetCharacterMovement()->IsCrouching() && !bIsSprinting && !bWantsToZoom)
 	{
 		bIsSprinting = true;
+		if (CurrentWeapon)
+		{
+			ExitFire();
+			bWantsToFire = false;
+		}
 		GetCharacterMovement()->MaxWalkSpeed = 750.0f;
 		if (Role < ROLE_Authority)
 		{
@@ -220,6 +227,10 @@ void AMBaseCharacter::EndSprint()
 	if (!GetCharacterMovement()->IsCrouching() && bIsSprinting && !bWantsToZoom)
 	{
 		bIsSprinting = false;
+		if (CurrentWeapon)
+		{
+			bWantsToFire = true;
+		}
 		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 		if (Role < ROLE_Authority)
 		{
@@ -230,7 +241,7 @@ void AMBaseCharacter::EndSprint()
 
 void AMBaseCharacter::StartFire()
 {
-	if (CurrentWeapon)
+	if (CurrentWeapon && bWantsToFire)
 	{
 		CurrentWeapon->StartFire();
 	}

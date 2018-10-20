@@ -94,6 +94,8 @@ protected:
 
 	bool bWantsToZoom;
 
+	bool bWantsToFire;
+
 	void ZoomHandling();
 
 	float DefaultFOV;
